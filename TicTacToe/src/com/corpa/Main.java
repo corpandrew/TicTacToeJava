@@ -4,16 +4,38 @@ package com.corpa;
 public class Main {
 
     public static void main(String[] args) {
-        long start = System.currentTimeMillis();
-        for (int i = 1; i <= 1000; i++) {
-            new Game(1000, false, false).playAIGameAsync();// plays 50 AI VS AI games, without output
+
+        long start = System.nanoTime();
+
+
+        int threadAmount = 10;
+        int gamesToPlay = 10;
+        int printAtProgress = 50;
+
+        Stats s = new Stats(printAtProgress);
+
+        Thread[] threads = new Thread[threadAmount];
+
+        for (int i = 0; i < threads.length; i++) {
+            threads[i] = new Game(gamesToPlay, false, false, printAtProgress).playAIGameAsync();
+            threads[i].start();
         }
-        long end = System.currentTimeMillis();
 
-        double totalTime = (end-start)/1000000000;
+        for (Thread thread : threads) {
+            try {
+                thread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
 
-        System.out.println(totalTime);
-//        new Game(1, true).playAIGame();// plays 50 AI VS AI games, with output
-//        new Game(5).playGame();
+        long end = System.nanoTime();
+
+        double totalTime = (double) (end - start) / 1000000000;
+
+        System.out.println(s.getStats());
+
+        System.out.println("\nTotal Time Taken: " + totalTime + " seconds");
+
     }
 }

@@ -15,6 +15,7 @@ public class Board {
     public Board() {
         board = new char[3][3];
         initializeBoard();
+        System.out.println(this);
     }
 
     /**
@@ -37,6 +38,7 @@ public class Board {
      */
     @Override
     public String toString() {
+        long start = System.nanoTime();
         String boardString = "\n";
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
@@ -52,6 +54,11 @@ public class Board {
             }
             boardString += "\n";
         }
+
+        long elapsedTime = System.nanoTime() - start;
+
+        System.out.println((double) elapsedTime / 1000000000.0);
+
         return boardString;
     }
 

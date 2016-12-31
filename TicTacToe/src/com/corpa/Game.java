@@ -11,12 +11,13 @@ import java.util.Scanner;
  */
 public class Game {
 
-    private Board board;
+    private Board2 board;
     private Player player;
     private Opponent opponent;
     private Opponent opponent2;
     private int gamesTied;
     private int amountGamesToPlay;
+    private int printAtProgress;
     private boolean printBoardOutput;
     private boolean printWinOutput;
     private Thread t;
@@ -26,9 +27,11 @@ public class Game {
      * Setup game for Player VS Opponent. Amount of games to play
      *
      * @param amountGamesToPlay
+     * @param b
+     * @param b1
      */
-    public Game(int amountGamesToPlay) {//For Player vs AI Game
-        board = new Board();
+    public Game(int amountGamesToPlay, boolean b, boolean b1) {//For Player vs AI Game
+        board = new Board2();
         this.amountGamesToPlay = amountGamesToPlay;
         this.gamesTied = 0;
     }
@@ -40,16 +43,17 @@ public class Game {
      * @param printBoardOutput,  true to print output, false not to
      * @param printWinOutput,
      */
-    public Game(int amountGamesToPlay, boolean printBoardOutput, boolean printWinOutput) {//For AI vs AI Game
+    public Game(int amountGamesToPlay, boolean printBoardOutput, boolean printWinOutput, int printAtProgress) {//For AI vs AI Game
         this.amountGamesToPlay = amountGamesToPlay;
         this.printBoardOutput = printBoardOutput;
         this.printWinOutput = printWinOutput;
 
-        board = new Board();
+        board = new Board2();
         this.opponent = new Opponent('X', "Opponent1", board);
         this.opponent2 = new Opponent('O', "Opponent2", board);
         this.gamesTied = 0;
-        s = new Stats();
+        this.printAtProgress = printAtProgress;
+        s = new Stats(printAtProgress);
     }
 
     /**
@@ -62,47 +66,42 @@ public class Game {
         System.out.print("Enter your name: ");
         String playerName = in.next();
 
-        System.out.print("Enter which letter you would like: ");
-        char letter = in.next().charAt(0);
-
-        player = new Player(letter, playerName);//create player object
-        Opponent opponent;
-
-        if (letter != 'O' && letter != 'o') {//make sure the letters are never the same
-            opponent = new Opponent('O', "Opponent", board);// create opponent object
-        } else {
-            opponent = new Opponent('X', "Opponent", board);
-        }
+        player = new Player('X', playerName);//create player object
+        Opponent opponent = new Opponent('O', "Opponent", board);
 
         //Print out player with there letter
-        System.out.println(player.getName() + " Letter: " + player.getLetter());
-        System.out.println(opponent.getName() + " Letter: " + opponent.getLetter() + "\n");
+        System.out.println(player.getName() + " Letter: " + player.getLetterChar());
+        System.out.println(opponent.getName() + " Letter: " + opponent.getLetterChar() + "\n");
 
         int x, y;
+        boolean firstGame = true;
         for (int i = 1; i <= amountGamesToPlay; i++) {// loop for how many games want to be played
             board.initializeBoard();// reset the board
             while (true) {
 
                 //Get input for which tile
-                System.out.println(board + "\n");
+                if (firstGame && printBoardOutput)
+                    board.printBoard();
+                firstGame = false;
 
                 opponent.setTilePicked(opponent.pickTile());
                 printAndSetTileAI(opponent);
 
-                System.out.println(board);
-
                 if (checkWinner(player, opponent)) {
-                    System.out.println(board);
+                    board.printBoard();
                     break;
                 }
 
                 System.out.print("Enter the x and y of the tile 11 being top left and 33 being bottom right: ");// 11 = row 1 col 1
 
                 player.setTilePicked(in.next());
-                printAndSetTile(player);
+//                printAndSetTile(player);
 
                 if (checkWinner(player, opponent))
                     break;
+
+                firstGame = false;
+
             }
             printScoreboard(player, opponent);
         }
@@ -130,18 +129,16 @@ public class Game {
 
                 if (checkWinner(opponent, opponent2))
                     break;
+
+                firstGame = false;
             }
-            firstGame = false;
             s.addGamePlayed();
         }
-
-        System.out.println(s.getStats());
-        printScoreboard(opponent, opponent2);
     }
 
-    public void playAIGameAsync() {
+    public Thread playAIGameAsync() {
         t = new Thread(this::playAIGame);
-        t.start();
+        return t;
     }
 
     private void printScoreboard(Player p1, Player p2) {
@@ -153,29 +150,31 @@ public class Game {
 
     private void printAndSetTileAI(Player player) {
         if (printBoardOutput)
-            System.out.println(player.getName() + " picked: Tile " + (player.getTilePicked().charAt(0) - 47) + ", " + (player.getTilePicked().charAt(1) - 47));
-        board.setTile(player.getLetter(), (player.getTilePicked().charAt(0) - 47), (player.getTilePicked().charAt(1) - 47));
+            System.out.println(player.getName() + " picked: Tile " + (player.getTilePicked().getX()) + ", " + (player.getTilePicked().getY()));
+        board.setTile(player.getTilePicked().getX(), player.getTilePicked().getY(), player.getLetter());
         if (printBoardOutput)
-            System.out.println(board);
+            board.printBoard();
     }
 
-    private void printAndSetTile(Player player) {
-        if (printBoardOutput)
-            System.out.println(player.getName() + " picked: Tile " + (player.getTilePicked().charAt(0) - 48) + ", " + (player.getTilePicked().charAt(1) - 48));
-        System.out.println(player.getTilePicked().charAt(0) - 48 + ", " + player.getTilePicked().charAt(1));
-        board.setTile(player.getLetter(), (player.getTilePicked().charAt(0) - 48), (player.getTilePicked().charAt(1) - 48));
-        if (printBoardOutput)
-            System.out.println(board);
-    }
+//    private void printAndSetTile(Player player) {
+//        if (printBoardOutput)
+//            System.out.println(player.getName() + " picked: Tile " + (player.getTilePicked().charAt(0) - 48) + ", " + (player.getTilePicked().charAt(1) - 48));
+//        System.out.println(player.getTilePicked().charAt(0) - 48 + ", " + player.getTilePicked().charAt(1));
+//        board.setTile(player.getLetter(), (player.getTilePicked().charAt(0) - 48), (player.getTilePicked().charAt(1) - 48));
+//        if (printBoardOutput)
+//            System.out.println(board);
+//    }
 
     private boolean checkWinner(Player p1, Player p2) {
-        if (board.isWinner() == p1.getLetter()) {
+        int winnerNum = board.isWinner();
+
+        if (winnerNum == p1.getLetter()) {
             p1.addWin();
             if(printWinOutput)
                 System.out.println(p1.getName() + " has won, it now has " + p1.getWinCount() + " wins.");
             s.addWinP1();
             return true;
-        } else if (board.isWinner() == p2.getLetter()) {
+        } else if (winnerNum == p2.getLetter()) {
             p2.addWin();
             if(printWinOutput)
                 System.out.println(p2.getName() + " has won, it now has " + p2.getWinCount() + " wins.");
@@ -196,27 +195,4 @@ public class Game {
         return s;
     }
 
-    //TODO change the way I use this all around.
-    private class Tile {
-        private int x;
-        private int y;
-
-        Tile(int x, int y) {
-            this.x = x;
-            this.y = y;
-        }
-
-        public int getX() {
-            return x;
-        }
-
-        public int getY() {
-            return y;
-        }
-
-        @Override
-        public String toString() {
-            return "" + x + y;
-        }
-    }
 }

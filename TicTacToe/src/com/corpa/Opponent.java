@@ -11,7 +11,7 @@ import java.util.Random;
  */
 public class Opponent extends Player {
 
-    private Board board;
+    private Board2 board;
 
     private Random r;
 
@@ -19,10 +19,10 @@ public class Opponent extends Player {
      * Instantiates Opponent
      *
      * @param letter, letter to use for marking tile
-     * @param name, name of Opponent
-     * @param board, needs reference to the board
+     * @param name,   name of Opponent
+     * @param board,  needs reference to the board
      */
-    Opponent(char letter, String name, Board board) {
+    public Opponent(char letter, String name, Board2 board) {
         super(letter, name);
         this.board = board;
         r = new Random();
@@ -34,12 +34,13 @@ public class Opponent extends Player {
     /**
      * Recursive Method
      * Generates 2 random numbers and checks if that tile is empty, if its not do it again
+     *
      * @return the tile picked as a string
      */
-    public String pickTile() {
-        String randomTile = "";
+    public Tile pickTile() {
+        Tile tile = new Tile(0, 0, 0);
         r.setSeed(System.currentTimeMillis());
-        randomTile += (r.nextInt(3));
+        tile.setX(r.nextInt(3));
 
         try {
             Thread.sleep(10);//clock time may be too close to change the seed
@@ -47,10 +48,10 @@ public class Opponent extends Player {
             e.printStackTrace();
         }
         r.setSeed(System.currentTimeMillis());
-        randomTile += (r.nextInt(3));
+        tile.setY(r.nextInt(3));
 //        System.out.println(randomTile); Show how many times it tries to pick a tile
-        if (board.emptyTile(randomTile.charAt(0) - 48, randomTile.charAt(1) - 48)) {
-            return randomTile;
+        if (board.isEmptyTile(tile)) {
+            return tile;
         } else {
             return pickTile();
         }
